@@ -1,11 +1,13 @@
 # dependencies
 node_modules/
+.npm-cache/
 
 # next.js
 .next/
 out/
 
 # local env files
+.env
 .env.local
 .env.*.local
 
