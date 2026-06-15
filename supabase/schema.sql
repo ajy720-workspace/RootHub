@@ -9,7 +9,10 @@ create table if not exists etymologies (
   text text not null,
   meaning text not null,
   origin text not null,
-  created_at timestamptz not null default now()
+  role text not null default '',
+  family text[] not null default '{}',
+  created_at timestamptz not null default now(),
+  unique (type, text)
 );
 
 create table if not exists words (
@@ -17,6 +20,7 @@ create table if not exists words (
   target_word text unique not null,
   total_meaning text not null,
   etymology_story text not null,
+  related_words text[] not null default '{}',
   created_at timestamptz not null default now()
 );
 
