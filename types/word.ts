@@ -5,6 +5,8 @@ export interface AnalysisSegment {
   text: string;
   meaning: string;
   origin: string;
+  role: string;
+  family?: string[];
 }
 
 export interface WordAnalysis {
@@ -12,4 +14,18 @@ export interface WordAnalysis {
   total_meaning: string;
   etymology_story: string;
   analysis: AnalysisSegment[];
+  related_words: string[];
+  cached?: boolean;
+}
+
+export type LibraryItemType = 'word' | 'etymology';
+
+export interface LibraryItem {
+  id: string;
+  itemType: LibraryItemType;
+  label: string;
+  meaning: string;
+  origin?: string;
+  segmentType?: SegmentType;
+  savedAt: string;
 }
