@@ -1,5 +1,7 @@
-import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 import { WordAnalysis } from '@/types/word';
+
+const MODEL = 'gemini-3.5-flash';
 
 const fixtures: Record<string, WordAnalysis> = {
   reinforce: {
@@ -28,41 +30,68 @@ const fixtures: Record<string, WordAnalysis> = {
   }
 };
 
+const wordAnalysisSchema = {
+  type: 'object',
+  properties: {
+    word: { type: 'string' },
+    total_meaning: { type: 'string' },
+    etymology_story: { type: 'string' },
+    analysis: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['prefix', 'root', 'suffix'] },
+          text: { type: 'string' },
+          meaning: { type: 'string' },
+          origin: { type: 'string' },
+          role: { type: 'string' },
+          family: { type: 'array', items: { type: 'string' } }
+        },
+        required: ['type', 'text', 'meaning', 'origin', 'role', 'family']
+      }
+    },
+    related_words: { type: 'array', items: { type: 'string' } }
+  },
+  required: ['word', 'total_meaning', 'etymology_story', 'analysis', 'related_words']
+} as const;
+
 export function fallbackAnalysis(target: string): WordAnalysis {
   const key = target.toLowerCase();
   return fixtures[key] ?? {
     word: key,
     total_meaning: `${key}의 의미를 형태소 단위로 탐색합니다.`,
     etymology_story:
-      '데모 분석입니다. OpenAI API 키와 Supabase 환경 변수를 연결하면 검증된 어원 정보를 JSON으로 생성하고 캐시에 저장합니다.',
+      '데모 분석입니다. Gemini API 키와 Supabase 환경 변수를 연결하면 검증된 어원 정보를 JSON으로 생성하고 캐시에 저장합니다.',
     analysis: [{ type: 'root', text: key, meaning: 'core word form', origin: 'Dictionary lookup recommended', role: '현재 MVP에서는 알 수 없는 단어를 하나의 어근 블록으로 표시합니다.', family: [] }],
     related_words: []
   };
 }
 
-export async function analyzeWordWithOpenAI(target: string): Promise<WordAnalysis> {
-  if (!process.env.OPENAI_API_KEY) {
+export async function analyzeWordWithGemini(target: string): Promise<WordAnalysis> {
+  if (!process.env.GEMINI_API_KEY) {
     return fallbackAnalysis(target);
   }
 
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    response_format: { type: 'json_object' },
-    messages: [
-      {
-        role: 'system',
-        content:
-          'You are an etymology tutor. Return only reliable JSON with word, total_meaning, etymology_story, analysis, related_words. analysis items require type(prefix/root/suffix), text, meaning, origin, role, family(array). Prefer Korean explanations and avoid unsupported segmentation.'
-      },
-      { role: 'user', content: `Analyze the English word: ${target}` }
-    ]
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const response = await ai.models.generateContent({
+    model: MODEL,
+    contents: `Analyze the English word: ${target}`,
+    config: {
+      systemInstruction: [
+        'You are an etymology tutor.',
+        'Return only reliable JSON with word, total_meaning, etymology_story, analysis, related_words.',
+        'analysis items require type(prefix/root/suffix), text, meaning, origin, role, family(array).',
+        'Prefer Korean explanations and avoid unsupported segmentation.'
+      ].join(' '),
+      responseMimeType: 'application/json',
+      responseJsonSchema: wordAnalysisSchema
+    }
   });
 
-  const content = response.choices[0]?.message.content;
-  if (!content) {
+  if (!response.text) {
     return fallbackAnalysis(target);
   }
 
-  return JSON.parse(content) as WordAnalysis;
+  return JSON.parse(response.text) as WordAnalysis;
 }

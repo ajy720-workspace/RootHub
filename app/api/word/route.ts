@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeWordWithOpenAI } from '@/lib/openai';
+import { analyzeWordWithGemini } from '@/lib/gemini';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { AnalysisSegment, WordAnalysis } from '@/types/word';
 
@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(cached);
   }
 
-  const analysis = await analyzeWordWithOpenAI(target);
+  const analysis = await analyzeWordWithGemini(target);
   const normalized = { ...analysis, word: normalizeTarget(analysis.word || target), cached: false };
   await cacheWord(normalized);
 
