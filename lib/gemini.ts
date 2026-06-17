@@ -62,7 +62,7 @@ export function fallbackAnalysis(target: string): WordAnalysis {
     word: key,
     total_meaning: `${key}의 의미를 형태소 단위로 탐색합니다.`,
     etymology_story:
-      '데모 분석입니다. Gemini API 키와 Supabase 환경 변수를 연결하면 검증된 어원 정보를 JSON으로 생성하고 캐시에 저장합니다.',
+      '데모 분석입니다. Gemini API 키와 DATABASE_URL을 연결하면 검증된 어원 정보를 JSON으로 생성하고 캐시에 저장합니다.',
     analysis: [{ type: 'root', text: key, meaning: 'core word form', origin: 'Dictionary lookup recommended', role: '현재 MVP에서는 알 수 없는 단어를 하나의 어근 블록으로 표시합니다.', family: [] }],
     related_words: []
   };

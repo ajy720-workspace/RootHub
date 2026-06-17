@@ -5,13 +5,13 @@ RootHub is a PWA-style vocabulary learning app that decomposes English words int
 ## Stack
 - Next.js (App Router, TypeScript)
 - Tailwind CSS
-- Supabase (Postgres/Auth)
+- PostgreSQL with Prisma
 - Gemini API
 
 ## Quick Start
 1. Install deps: `yarn install`
-2. Copy env: `cp .env.example .env.local`
+2. Copy env: `cp .env.example .env.local` and replace the `DATABASE_URL` placeholders.
 3. Run dev server: `yarn dev`
 
 ## Current Scope
-Phase 1 MVP: search -> analysis -> visualization -> DB caching.
+Phase 1 MVP: search -> analysis -> visualization -> PostgreSQL caching.

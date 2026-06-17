@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum EtymologyType {
+  prefix @map("prefix")
+  root   @map("root")
+  suffix @map("suffix")
+
+  @@map("etymology_type")
+}
+
+enum CollectionItemType {
+  word      @map("word")
+  etymology @map("etymology")
+
+  @@map("collection_item_type")
+}
+
+model Etymology {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type      EtymologyType
+  text      String
+  meaning   String
+  origin    String
+  role      String        @default("")
+  family    String[]      @default([])
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  segments  WordSegment[]
+
+  @@unique([type, text])
+  @@map("etymologies")
+}
+
+model Word {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  targetWord     String        @unique @map("target_word")
+  totalMeaning   String        @map("total_meaning")
+  etymologyStory String        @map("etymology_story")
+  relatedWords   String[]      @default([]) @map("related_words")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  segments       WordSegment[]
+
+  @@map("words")
+}
+
+model WordSegment {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  wordId      String    @map("word_id") @db.Uuid
+  etymologyId String    @map("etymology_id") @db.Uuid
+  sequence    Int
+  customText  String?   @map("custom_text")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  word        Word      @relation(fields: [wordId], references: [id], onDelete: Cascade)
+  etymology   Etymology @relation(fields: [etymologyId], references: [id], onDelete: Restrict)
+
+  @@unique([wordId, sequence])
+  @@map("word_segments")
+}
+
+model UserCollection {
+  id        String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String             @map("user_id") @db.Uuid
+  itemType  CollectionItemType @map("item_type")
+  itemId    String             @map("item_id") @db.Uuid
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@map("user_collections")
+}
