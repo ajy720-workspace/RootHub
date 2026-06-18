@@ -30,6 +30,11 @@ export default function HomePage() {
     () => library.filter((item) => item.itemType === libraryTab).sort((a, b) => b.savedAt.localeCompare(a.savedAt)),
     [library, libraryTab]
   );
+  const savedIds = useMemo(() => new Set(library.map((item) => item.id)), [library]);
+  const currentWordId = result ? `word:${result.word}` : '';
+  const currentSegmentId = selected ? `etymology:${selected.type}:${selected.text}` : '';
+  const isCurrentWordSaved = currentWordId ? savedIds.has(currentWordId) : false;
+  const isCurrentSegmentSaved = currentSegmentId ? savedIds.has(currentSegmentId) : false;
 
   async function searchWord(nextQuery = query) {
     const target = nextQuery.trim().toLowerCase();
@@ -61,6 +66,11 @@ export default function HomePage() {
   }
 
   function saveItem(item: LibraryItem) {
+    if (savedIds.has(item.id)) {
+      setStatus(`${item.label} 이미 저장됨`);
+      return;
+    }
+
     const next = [item, ...library.filter((saved) => saved.id !== item.id)];
     setLibrary(next);
     localStorage.setItem(libraryKey, JSON.stringify(next));
@@ -90,8 +100,9 @@ export default function HomePage() {
                 className="h-12 w-full rounded-md border border-[#dddddd] bg-white px-4 text-base outline-none focus:border-[#458fff]"
                 placeholder="영단어 검색 (예: reinforce)"
               />
-              <button disabled={isLoading} className="mt-3 h-12 w-full rounded-xl bg-[#181d26] px-6 font-medium text-white disabled:opacity-60 sm:mt-0 sm:w-auto">
-                {isLoading ? 'Analyzing' : 'Analyze'}
+              <button disabled={isLoading} className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#181d26] px-6 font-medium text-white disabled:opacity-70 sm:mt-0 sm:w-auto">
+                {isLoading && <span aria-hidden="true" className="h-4 w-4 rounded-full border-2 border-white/35 border-t-white motion-safe:animate-spin" />}
+                <span>{isLoading ? 'Analyzing' : 'Analyze'}</span>
               </button>
             </form>
 
@@ -103,6 +114,18 @@ export default function HomePage() {
               ))}
             </div>
 
+            {isLoading && (
+              <section className="rounded-xl border border-[#dddddd] bg-[#f8fafc] p-5" aria-live="polite" aria-busy="true">
+                <div className="flex items-center gap-4">
+                  <span aria-hidden="true" className="h-9 w-9 shrink-0 rounded-full border-4 border-[#dddddd] border-t-[#181d26] motion-safe:animate-spin" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-[#41454d]">Analysis in progress</p>
+                    <p className="mt-1 break-words text-lg text-[#181d26]">{query.trim().toLowerCase() || 'word'} 형태소를 분해하고 있습니다.</p>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {result && (
               <section className="space-y-6 rounded-xl border border-[#dddddd] p-4 sm:p-5">
                 <div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-start">
@@ -111,7 +134,16 @@ export default function HomePage() {
                     <h2 className="break-words text-3xl font-normal">{result.word}</h2>
                     <p className="mt-2 text-[#333840]">{result.total_meaning}</p>
                   </div>
-                  <button onClick={() => saveItem({ id: `word:${result.word}`, itemType: 'word', label: result.word, meaning: result.total_meaning, savedAt: new Date().toISOString() })} className="min-h-11 rounded-xl border border-[#dddddd] px-4 py-2 text-sm sm:shrink-0">+ 저장</button>
+                  <button
+                    onClick={() => saveItem({ id: currentWordId, itemType: 'word', label: result.word, meaning: result.total_meaning, savedAt: new Date().toISOString() })}
+                    className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm sm:shrink-0 ${
+                      isCurrentWordSaved ? 'border-[#3a7d44] bg-[#eef8f0] text-[#25602f]' : 'border-[#dddddd] text-[#181d26]'
+                    }`}
+                    aria-pressed={isCurrentWordSaved}
+                  >
+                    <span aria-hidden="true">{isCurrentWordSaved ? '✓' : '+'}</span>
+                    <span>{isCurrentWordSaved ? '저장됨' : '저장'}</span>
+                  </button>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   {result.analysis.map((segment, index) => <SegmentPill key={`${segment.text}-${index}`} segment={segment} selected={selected?.text === segment.text} index={index} onSelect={setSelected} />)}
@@ -127,7 +159,16 @@ export default function HomePage() {
                   <p className="mt-3 text-[#333840]">{selected.meaning}</p>
                   <p className="mt-4 text-sm text-[#41454d]">Origin: {selected.origin}</p>
                   <p className="mt-4 text-sm leading-6">{selected.role}</p>
-                  <button onClick={() => saveItem({ id: `etymology:${selected.type}:${selected.text}`, itemType: 'etymology', label: selected.text, meaning: selected.meaning, origin: selected.origin, segmentType: selected.type, savedAt: new Date().toISOString() })} className="mt-6 min-h-11 w-full rounded-xl bg-[#181d26] px-4 py-2 text-sm font-medium text-white sm:w-auto">형태소 저장</button>
+                  <button
+                    onClick={() => saveItem({ id: currentSegmentId, itemType: 'etymology', label: selected.text, meaning: selected.meaning, origin: selected.origin, segmentType: selected.type, savedAt: new Date().toISOString() })}
+                    className={`mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium sm:w-auto ${
+                      isCurrentSegmentSaved ? 'border border-[#3a7d44] bg-white text-[#25602f]' : 'bg-[#181d26] text-white'
+                    }`}
+                    aria-pressed={isCurrentSegmentSaved}
+                  >
+                    <span aria-hidden="true">{isCurrentSegmentSaved ? '✓' : '+'}</span>
+                    <span>{isCurrentSegmentSaved ? '형태소 저장됨' : '형태소 저장'}</span>
+                  </button>
                 </article>
                 <article className="rounded-xl bg-[#181d26] p-5 text-white sm:p-6">
                   <p className="text-xs uppercase tracking-[0.16em] text-white/70 sm:text-sm sm:tracking-[0.18em]">Etymology Story</p>
