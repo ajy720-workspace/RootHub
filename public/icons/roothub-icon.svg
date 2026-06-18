@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">RootHub app icon</title>
+  <desc id="desc">A stylized language root network forming an abstract R shape.</desc>
+  <defs>
+    <linearGradient id="bg" x1="148" y1="96" x2="876" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fbf8ef"/>
+      <stop offset="0.52" stop-color="#eff7eb"/>
+      <stop offset="1" stop-color="#182027"/>
+    </linearGradient>
+    <linearGradient id="stem" x1="330" y1="218" x2="688" y2="804" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#16312b"/>
+      <stop offset="0.55" stop-color="#256b48"/>
+      <stop offset="1" stop-color="#f0a23a"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="436" y1="232" x2="724" y2="476" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#71d86f"/>
+      <stop offset="1" stop-color="#2f8f5d"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="24" stdDeviation="26" flood-color="#0d1418" flood-opacity="0.26"/>
+    </filter>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#13201c" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="224" fill="url(#bg)"/>
+  <circle cx="778" cy="212" r="114" fill="#ffcf73" opacity="0.9"/>
+  <circle cx="182" cy="812" r="154" fill="#d8efe0" opacity="0.55"/>
+  <g filter="url(#shadow)">
+    <path d="M310 778V250c0-40 32-72 72-72h198c137 0 244 88 244 214 0 90-58 160-146 191l115 160c24 34 0 81-42 81h-83c-24 0-47-12-61-32L500 637h-74v141c0 38-31 69-69 69h-3c-24 0-44-9-58-23-13-13-20-30-20-46h34Z" fill="#11191f" opacity="0.18"/>
+    <path d="M282 746V230c0-41 33-74 74-74h216c143 0 254 91 254 222 0 96-61 169-154 201l122 170c22 31 0 74-38 74h-88c-23 0-44-11-57-30L493 626h-86v120c0 43-35 78-78 78s-47-35-47-78Z" fill="url(#stem)"/>
+    <path d="M407 486h150c67 0 114-38 114-93s-47-91-114-91H407v184Z" fill="#f8fbf2"/>
+    <path d="M407 486h150c67 0 114-38 114-93 0-11-2-22-6-32-30 30-76 47-132 47H407v78Z" fill="#deefdc"/>
+  </g>
+  <g filter="url(#soft)" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M406 628c-72 48-124 110-155 186" stroke="#19332c" stroke-width="34"/>
+    <path d="M476 631c-24 72-22 139 7 202" stroke="#f1a33c" stroke-width="30"/>
+    <path d="M548 620c46 58 94 98 170 126" stroke="#245b44" stroke-width="30"/>
+    <circle cx="236" cy="838" r="38" fill="#f6b14a"/>
+    <circle cx="484" cy="856" r="35" fill="#19332c"/>
+    <circle cx="744" cy="755" r="40" fill="#f7f4e9"/>
+  </g>
+  <g filter="url(#soft)">
+    <path d="M534 224c82-51 168-44 236 21-25 90-96 146-191 156-66 7-123-14-172-61 26-49 67-88 127-116Z" fill="url(#leaf)"/>
+    <path d="M457 340c92-49 178-75 272-84" fill="none" stroke="#ecf7e7" stroke-width="24" stroke-linecap="round"/>
+    <path d="M565 308c-16-26-17-54-4-83" fill="none" stroke="#ecf7e7" stroke-width="16" stroke-linecap="round" opacity="0.72"/>
+    <path d="M646 285c8 33 0 64-24 93" fill="none" stroke="#ecf7e7" stroke-width="16" stroke-linecap="round" opacity="0.72"/>
+  </g>
+  <g opacity="0.9">
+    <rect x="172" y="254" width="106" height="60" rx="26" fill="#f5b14b"/>
+    <rect x="178" y="332" width="80" height="50" rx="22" fill="#f7f4e9"/>
+    <rect x="768" y="514" width="96" height="56" rx="24" fill="#f7f4e9"/>
+    <rect x="768" y="586" width="74" height="46" rx="20" fill="#6fcf70"/>
+  </g>
+</svg>
