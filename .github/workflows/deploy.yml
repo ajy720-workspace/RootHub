@@ -1,0 +1,94 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-push:
+    name: Build and Push to GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare image name
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.image.outputs.name }}
+          tags: |
+            type=sha
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  deploy:
+    name: Production Deploy
+    runs-on: self-hosted
+    needs: build-and-push
+    environment: Production
+    env:
+      APP_PORT: ${{ vars.ROOTHUB_APP_PORT || '3000' }}
+      ENV_FILE: .env.production
+
+    permissions:
+      packages: read
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create ${{ env.ENV_FILE }} file
+        run: |
+          cat > "${ENV_FILE}" <<'EOF'
+          DATABASE_URL=${{ secrets.ROOTHUB_DATABASE_URL }}
+          GEMINI_API_KEY=${{ secrets.ROOTHUB_GEMINI_API_KEY }}
+          EOF
+
+      - name: Log in to the GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy with Docker Compose
+        env:
+          IMAGE_NAME_WITH_TAG: ${{ needs.build-and-push.outputs.tags }}
+          ENV_FILE: ${{ env.ENV_FILE }}
+          APP_PORT: ${{ env.APP_PORT }}
+        run: |
+          docker compose down
+          docker compose pull
+          docker compose up -d
+
+      - name: Clean up old images
+        run: |
+          docker image prune -af

@@ -1,0 +1,14 @@
+services:
+  roothub:
+    image: ${IMAGE_NAME_WITH_TAG}
+    container_name: roothub
+    restart: unless-stopped
+    env_file:
+      - ${ENV_FILE:-.env.production}
+    environment:
+      HOSTNAME: 0.0.0.0
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    command: sh -c "yarn prisma migrate deploy && yarn start"
