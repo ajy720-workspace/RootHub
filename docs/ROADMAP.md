@@ -9,11 +9,11 @@ RootHub은 '언어의 구조적 이해'라는 핵심 가치를 시작으로, 개
 - [ ] 프로젝트 스캐폴딩 (Next.js, Tailwind)
 - [ ] AI 단어 분해 프롬프트 엔지니어링 (OpenAI)
 - [ ] 형태소별 컬러 코딩 UI 컴포넌트 개발
-- [ ] Supabase 기반 기본 캐싱 서버 구축
+- [ ] PostgreSQL 기반 기본 캐싱 서버 구축
 
 ## Phase 2: Personalization (User Library)
 **목표:** 저장 및 관리 기능을 통해 사용자의 리텐션(Retention) 확보.
-- [ ] Supabase Auth (Social Login) 연동
+- [ ] Auth.js (Social Login) 연동
 - [ ] 나만의 단어장 (My Library) 기능
 - [ ] 특정 어근/접사 팔로우 및 모아보기
 - [ ] 최근 검색어 및 개인 검색 히스토리 관리

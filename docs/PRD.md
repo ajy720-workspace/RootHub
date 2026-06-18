@@ -57,7 +57,7 @@
 
 * **플랫폼:** PWA (Progressive Web App) - 접근성 확보 및 추후 Native 앱 전환 대비
 * **Frontend:** Next.js (React), Tailwind CSS
-* **Backend/Database:** Supabase (PostgreSQL 기반, Auth 및 캐싱 활용)
+* **Backend/Database:** PostgreSQL (Prisma 기반 캐싱) 및 Auth.js
 * **AI API:** OpenAI (GPT-4o-mini 등), JSON Mode 응답 강제 적용
 
 ### 4.2. 검색 및 캐싱 로직 (Data Flow)
