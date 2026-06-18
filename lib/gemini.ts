@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { WordAnalysis } from '@/types/word';
 
-const MODEL = 'gemini-3.5-flash';
+const MODEL = 'gemini-2.5-flash';
 
 const fixtures: Record<string, WordAnalysis> = {
   reinforce: {
