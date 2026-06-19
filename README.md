@@ -17,8 +17,12 @@ RootHub is a PWA-style vocabulary learning app that decomposes English words int
 Pushing to `main` builds a Docker image, pushes it to GHCR, then deploys it on the `self-hosted` runner with Docker Compose.
 
 Configure these values in the GitHub `Production` environment:
-- Secrets: `ROOTHUB_DATABASE_URL`, `ROOTHUB_GEMINI_API_KEY`
+- Secrets: `ROOTHUB_DATABASE_URL`, `ROOTHUB_GEMINI_API_KEY`, `NEXTAUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 - Variable: `ROOTHUB_APP_PORT` (optional, defaults to `3000`)
 
+Google OAuth must allow these redirect URIs:
+- Development: `http://localhost:3000/api/auth/callback/google`
+- Production: `https://{YOUR_DOMAIN}/api/auth/callback/google`
+
 ## Current Scope
-Phase 1 MVP: search -> analysis -> visualization -> PostgreSQL caching.
+Phase 1 MVP: search -> analysis -> visualization -> PostgreSQL caching -> authenticated personal libraries.

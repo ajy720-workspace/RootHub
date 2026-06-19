@@ -1,5 +1,6 @@
 import './globals.css';
 import type { Metadata, Viewport } from 'next';
+import { AuthProvider } from '@/components/AuthProvider';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 
 const appleStartupImages = [
@@ -87,8 +88,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ko">
       <body>
-        {children}
-        <ServiceWorkerRegistration />
+        <AuthProvider>
+          {children}
+          <ServiceWorkerRegistration />
+        </AuthProvider>
       </body>
     </html>
   );

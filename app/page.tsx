@@ -1,6 +1,7 @@
 'use client';
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { signIn, signOut, useSession } from 'next-auth/react';
 import { SegmentPill } from '@/components/SegmentPill';
 import { AnalysisSegment, LibraryItem, WordAnalysis } from '@/types/word';
 
@@ -8,7 +9,12 @@ const starterWords = ['reinforce', 'define', 'transport'];
 const libraryKey = 'roothub.library.v1';
 const recentKey = 'roothub.recent.v1';
 
+function readLocalLibrary(): LibraryItem[] {
+  return JSON.parse(localStorage.getItem(libraryKey) ?? '[]') as LibraryItem[];
+}
+
 export default function HomePage() {
+  const { data: session, status: sessionStatus } = useSession();
   const [query, setQuery] = useState('reinforce');
   const [recent, setRecent] = useState<string[]>(starterWords);
   const [result, setResult] = useState<WordAnalysis | null>(null);
@@ -17,14 +23,55 @@ export default function HomePage() {
   const [libraryTab, setLibraryTab] = useState<'word' | 'etymology'>('word');
   const [status, setStatus] = useState('검색할 단어를 입력하세요.');
   const [isLoading, setIsLoading] = useState(false);
+  const didMergeGuestLibrary = useRef(false);
 
   useEffect(() => {
-    setLibrary(JSON.parse(localStorage.getItem(libraryKey) ?? '[]'));
     setRecent(JSON.parse(localStorage.getItem(recentKey) ?? JSON.stringify(starterWords)));
     void searchWord('reinforce');
     // The initial demo load should run once after localStorage hydration.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (sessionStatus === 'loading') {
+      return;
+    }
+
+    if (sessionStatus === 'unauthenticated') {
+      didMergeGuestLibrary.current = false;
+      setLibrary(readLocalLibrary());
+      return;
+    }
+
+    async function loadPersonalLibrary() {
+      const guestLibrary = readLocalLibrary();
+      const shouldMerge = guestLibrary.length > 0 && !didMergeGuestLibrary.current;
+      const endpoint = shouldMerge ? '/api/library/merge' : '/api/library';
+      const response = await fetch(endpoint, {
+        method: shouldMerge ? 'POST' : 'GET',
+        headers: shouldMerge ? { 'Content-Type': 'application/json' } : undefined,
+        body: shouldMerge ? JSON.stringify({ items: guestLibrary }) : undefined
+      });
+
+      if (!response.ok) {
+        throw new Error('개인 라이브러리를 불러오지 못했습니다.');
+      }
+
+      const data = (await response.json()) as { library: LibraryItem[]; mergedCount?: number };
+      setLibrary(data.library);
+      didMergeGuestLibrary.current = true;
+
+      if (shouldMerge) {
+        localStorage.removeItem(libraryKey);
+        setStatus(`${data.mergedCount ?? guestLibrary.length}개 항목을 계정 라이브러리에 병합했습니다.`);
+      }
+    }
+
+    void loadPersonalLibrary().catch((error) => {
+      setLibrary(readLocalLibrary());
+      setStatus(error instanceof Error ? error.message : '개인 라이브러리 동기화에 실패했습니다.');
+    });
+  }, [sessionStatus]);
 
   const visibleLibrary = useMemo(
     () => library.filter((item) => item.itemType === libraryTab).sort((a, b) => b.savedAt.localeCompare(a.savedAt)),
@@ -65,9 +112,32 @@ export default function HomePage() {
     void searchWord();
   }
 
-  function saveItem(item: LibraryItem) {
+  async function saveItem(item: LibraryItem) {
     if (savedIds.has(item.id)) {
       setStatus(`${item.label} 이미 저장됨`);
+      return;
+    }
+
+    if (sessionStatus === 'loading') {
+      setStatus('로그인 상태 확인 중입니다.');
+      return;
+    }
+
+    if (sessionStatus === 'authenticated') {
+      const response = await fetch('/api/library', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemKey: item.id })
+      });
+
+      if (!response.ok) {
+        setStatus('개인 라이브러리에 저장하지 못했습니다.');
+        return;
+      }
+
+      const data = (await response.json()) as { library: LibraryItem[] };
+      setLibrary(data.library);
+      setStatus(`${item.label} 계정 라이브러리에 저장 완료`);
       return;
     }
 
@@ -82,7 +152,18 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-5 sm:px-6 md:py-12 lg:py-20">
         <nav className="mb-8 flex min-h-12 items-center justify-between gap-3 border-b border-[#dddddd] pb-4 text-sm md:mb-16">
           <span className="text-xl font-medium">RootHub</span>
-          <a href="#library" className="shrink-0 rounded-lg border border-[#dddddd] px-4 py-2.5">My Library</a>
+          <div className="flex items-center gap-2">
+            <a href="#library" className="shrink-0 rounded-lg border border-[#dddddd] px-4 py-2.5">My Library</a>
+            {sessionStatus === 'authenticated' ? (
+              <button onClick={() => void signOut()} className="shrink-0 rounded-lg bg-[#181d26] px-4 py-2.5 text-white">
+                로그아웃
+              </button>
+            ) : (
+              <button onClick={() => void signIn('google')} className="shrink-0 rounded-lg bg-[#181d26] px-4 py-2.5 text-white">
+                Google 로그인
+              </button>
+            )}
+          </div>
         </nav>
 
         <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:items-start">
@@ -135,7 +216,7 @@ export default function HomePage() {
                     <p className="mt-2 text-[#333840]">{result.total_meaning}</p>
                   </div>
                   <button
-                    onClick={() => saveItem({ id: currentWordId, itemType: 'word', label: result.word, meaning: result.total_meaning, savedAt: new Date().toISOString() })}
+                    onClick={() => void saveItem({ id: currentWordId, itemType: 'word', label: result.word, meaning: result.total_meaning, savedAt: new Date().toISOString() })}
                     className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm sm:shrink-0 ${
                       isCurrentWordSaved ? 'border-[#3a7d44] bg-[#eef8f0] text-[#25602f]' : 'border-[#dddddd] text-[#181d26]'
                     }`}
@@ -160,7 +241,7 @@ export default function HomePage() {
                   <p className="mt-4 text-sm text-[#41454d]">Origin: {selected.origin}</p>
                   <p className="mt-4 text-sm leading-6">{selected.role}</p>
                   <button
-                    onClick={() => saveItem({ id: currentSegmentId, itemType: 'etymology', label: selected.text, meaning: selected.meaning, origin: selected.origin, segmentType: selected.type, savedAt: new Date().toISOString() })}
+                    onClick={() => void saveItem({ id: currentSegmentId, itemType: 'etymology', label: selected.text, meaning: selected.meaning, origin: selected.origin, segmentType: selected.type, savedAt: new Date().toISOString() })}
                     className={`mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium sm:w-auto ${
                       isCurrentSegmentSaved ? 'border border-[#3a7d44] bg-white text-[#25602f]' : 'bg-[#181d26] text-white'
                     }`}
@@ -195,6 +276,9 @@ export default function HomePage() {
           <aside id="library" className="rounded-xl border border-[#dddddd] bg-white p-4 sm:p-5 lg:sticky lg:top-6">
             <p className="text-sm text-[#41454d]">{status}</p>
             <h2 className="mt-4 text-2xl font-normal">My Library</h2>
+            <p className="mt-1 text-xs text-[#41454d]">
+              {sessionStatus === 'authenticated' ? `${session?.user?.name ?? session?.user?.email ?? '계정'}의 개인 라이브러리` : '비회원 브라우저 라이브러리'}
+            </p>
             <div className="mt-4 grid grid-cols-2 rounded-lg border border-[#dddddd] p-1 text-sm">
               <button onClick={() => setLibraryTab('word')} className={`min-h-10 rounded-md py-2 ${libraryTab === 'word' ? 'bg-[#181d26] text-white' : ''}`}>단어</button>
               <button onClick={() => setLibraryTab('etymology')} className={`min-h-10 rounded-md py-2 ${libraryTab === 'etymology' ? 'bg-[#181d26] text-white' : ''}`}>어근/접사</button>
