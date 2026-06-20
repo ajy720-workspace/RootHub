@@ -56,6 +56,7 @@ jobs:
     env:
       APP_PORT: ${{ vars.ROOTHUB_APP_PORT || '3000' }}
       ENV_FILE: .env.production
+      NEXTAUTH_URL: ${{ vars.ROOTHUB_NEXTAUTH_URL }}
 
     permissions:
       packages: read
@@ -70,6 +71,10 @@ jobs:
           cat > "${ENV_FILE}" <<'EOF'
           DATABASE_URL=${{ secrets.ROOTHUB_DATABASE_URL }}
           GEMINI_API_KEY=${{ secrets.ROOTHUB_GEMINI_API_KEY }}
+          NEXTAUTH_URL=${{ env.NEXTAUTH_URL }}
+          NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
           EOF
 
       - name: Log in to the GitHub Container Registry

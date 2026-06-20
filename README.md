@@ -18,7 +18,7 @@ Pushing to `main` builds a Docker image, pushes it to GHCR, then deploys it on t
 
 Configure these values in the GitHub `Production` environment:
 - Secrets: `ROOTHUB_DATABASE_URL`, `ROOTHUB_GEMINI_API_KEY`, `NEXTAUTH_SECRET`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
-- Variable: `ROOTHUB_APP_PORT` (optional, defaults to `3000`)
+- Variables: `ROOTHUB_NEXTAUTH_URL`, `ROOTHUB_APP_PORT` (optional, defaults to `3000`)
 
 Google OAuth must allow these redirect URIs:
 - Development: `http://localhost:3000/api/auth/callback/google`
